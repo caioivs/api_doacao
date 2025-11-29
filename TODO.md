@@ -1,24 +1,4 @@
-# TODO: Transformar Projeto para Sistema de Doações de Alimentos
-
-## Etapas Principais
-- [ ] Atualizar banco.sql para novas tabelas (Doadores, Doações, Instituições)
-- [ ] Renomear e atualizar DAOs (IdeiaDAO -> DoacaoDAO, UsuarioDAO -> DoadorDAO, criar InstituicaoDAO)
-- [ ] Renomear e atualizar Services (IdeiaService -> DoacaoService, ajustar AuthService)
-- [ ] Renomear e atualizar Controllers (Ideia -> Doacao, ajustar Auth)
-- [ ] Atualizar Rotas.php para novos endpoints
-- [ ] Renomear e atualizar Templates e Views (ideia -> doacao)
-- [ ] Renomear Interfaces (IIdeiaDAO -> IDoacaoDAO)
-- [ ] Testar aplicação e ajustar autenticação
-
-## Arquivos a Editar
-- banco.sql
-- dao/mysql/IdeiaDAO.php -> DoacaoDAO.php
-- dao/mysql/UsuarioDAO.php -> DoadorDAO.php
-- dao/IIdeiaDAO.php -> IDoacaoDAO.php
-- service/IdeiaService.php -> DoacaoService.php
-- controller/Ideia.php -> Doacao.php
-- generic/Rotas.php
-- public/ideia/ -> public/doacao/
-- template/IdeiaTemp.php -> DoacaoTemp.php
-- service/AuthService.php
-- controller/Auth.php
+- [x] Atualizar Acao.php para incluir constantes de métodos HTTP e métodos de execução conforme o código fornecido
+- [x] Atualizar Rotas.php para usar objetos Acao para as rotas, adaptando as rotas existentes
+- [x] Atualizar Controller.php para usar o novo método executar e lidar com Retorno
+- [x] Testar as mudanças para garantir que as rotas funcionem corretamente

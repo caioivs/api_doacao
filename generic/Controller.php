@@ -9,47 +9,39 @@ class Controller {
     }
 
     public function verificarChamadas($rota) {
-        // 1. Busca a configuração da rota 
-        $endpoint = $this->rotas->verificar($rota);
+        // 1. Busca a configuração da rota
+        $retorno = $this->rotas->executar($rota);
 
-        if ($endpoint) {
+        if ($retorno) {
             // 2. Verifica se a rota exige autenticação
-            if ($endpoint->autenticar) {
-                
-                // Verifica se é uma chamada de API (pelo prefixo) ou Web
-                
-                if (strpos($rota, 'api/') === 0) {
-                    $jwt = new JWTAuth();
-                    $tokenValido = $jwt->verificar();
-                    
-                    if (!$tokenValido) {
-                        http_response_code(401);
-                        echo json_encode(["erro" => "Acesso não autorizado. Token inválido."]);
-                        return; 
-                    }
-                } else {
-                    // Lógica Sessão (WEB)
-                    if (session_status() === PHP_SESSION_NONE) session_start();
-                    if (!isset($_SESSION['usuario_id'])) {
-                        header("Location: /mvc_votacao/login/form");
-                        exit;
-                    }
+            // Nota: A autenticação agora é verificada dentro do Acao->executar(), mas mantemos a lógica aqui para compatibilidade
+            // Para rotas API, assumimos que o endpoint tem autenticar
+            if (strpos($rota, 'api/') === 0) {
+                // Verifica autenticação JWT para API
+                $jwt = new JWTAuth();
+                $tokenValido = $jwt->verificar();
+
+                if (!$tokenValido) {
+                    http_response_code(401);
+                    echo json_encode(["erro" => "Acesso não autorizado. Token inválido."]);
+                    return;
+                }
+            } else {
+                // Lógica Sessão (WEB)
+                if (session_status() === PHP_SESSION_NONE) session_start();
+                if (!isset($_SESSION['usuario_id'])) {
+                    header("Location: /mvc_votacao/login/form");
+                    exit;
                 }
             }
 
-            // Se passou pela segurança, Executa a Ação
-            $acao = new Acao($endpoint->classe, $endpoint->metodo);
-            $retorno = $acao->executar();
-
-            // 4. Se for API, retorna JSON
+            // 3. Se for API, retorna JSON
             if (strpos($rota, 'api/') === 0) {
                 header("Content-Type: application/json");
-                // Se o retorno for um objeto Retorno, usa toJson, senão encode normal
-                if ($retorno instanceof Retorno) {
-                    echo $retorno->toJson();
-                } else {
-                    echo json_encode($retorno);
-                }
+                echo $retorno->toJson();
+            } else {
+                // Para web, echo os dados
+                echo $retorno->dados;
             }
 
         } else {
