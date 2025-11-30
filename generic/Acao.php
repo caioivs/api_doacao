@@ -1,91 +1,85 @@
 <?php
-
 namespace generic;
 
 use ReflectionMethod;
 
 class Acao
 {
-    const POST = "POST";
-    const GET = "GET";
-    const PUT = "PUT";
-    const PATCH = "PATCH";
-    const DELETE = "DELETE";
+    private $classe;
+    private $metodo;
 
-    private $endpoint;
-
-    public function __construct($endpoint = [])
+    // Construtor simplificado: recebe direto a classe e o método a executar
+    public function __construct($classe, $metodo)
     {
-        $this->endpoint = $endpoint;
+        $this->classe = $classe;
+        $this->metodo = $metodo;
     }
 
     public function executar()
     {
-        $end = $this->endpointMetodo();
+        // 1. Valida se a classe e método existem
+        if (!class_exists($this->classe)) {
+            return ["erro" => "Classe '{$this->classe}' não encontrada."];
+        }
+        $obj = new $this->classe();
+        
+        if (!method_exists($obj, $this->metodo)) {
+            return ["erro" => "Método '{$this->metodo}' não encontrado na classe."];
+        }
 
-        if ($end) {
-            $reflectMetodo = new ReflectionMethod($end->classe, $end->execucao);
-            $parametros = $reflectMetodo->getParameters();
-            $returnParam =$this->getParam();
+        // 2. Prepara a reflexão para injetar parâmetros
+        $reflectMetodo = new ReflectionMethod($this->classe, $this->metodo);
+        $parametros = $reflectMetodo->getParameters();
+        
+        // 3. Pega TUDO o que foi enviado (JSON + POST + GET)
+        $dadosRecebidos = $this->getParam(); 
+        $argumentosParaFuncao = [];
 
-            if($parametros){
-                $para=[];
-                //aceita parametros passado no metodo do controller
-                foreach($parametros as $v){
-                    $name = $v->getName();
-
-                    if(!isset($returnParam[$name])){
-                        return false;
-                    }
-
-                    $para[$name] = $returnParam[$name];
+        // 4. Injeta os dados automaticamente nos argumentos da função
+        foreach ($parametros as $param) {
+            $nomeParametro = $param->getName();
+            
+            if (isset($dadosRecebidos[$nomeParametro])) {
+                $argumentosParaFuncao[$nomeParametro] = $dadosRecebidos[$nomeParametro];
+            } else {
+                // Se o parâmetro for obrigatório e não veio, dá erro (evita o retorno null silencioso)
+                if (!$param->isOptional()) {
+                    return ["erro" => "Parâmetro obrigatório faltando: '$nomeParametro'. Verifique o JSON enviado."];
                 }
-                //pegar todos os parametros passado pelo endpoint
-                return $reflectMetodo->invokeArgs(new $end->classe(),$para);
-
+                $argumentosParaFuncao[$nomeParametro] = $param->getDefaultValue();
             }
-            return $reflectMetodo->invoke(new $end->classe());
-
-            // $obj = new $end->classe();
-            // return $obj->{$end->execucao}();
         }
-        return null;
+
+        // 5. Executa
+        return $reflectMetodo->invokeArgs($obj, $argumentosParaFuncao);
     }
 
-    private function endpointMetodo()
-    {
-        return isset($this->endpoint[$_SERVER["REQUEST_METHOD"]]) ? $this->endpoint[$_SERVER["REQUEST_METHOD"]] : null;
-    }
-
+    // Mantive suas funções originais de pegar dados, mas simplifiquei a chamada
     private function getPost(){
-        if($_POST){
-            return $_POST;
-        }
-        return [];
+        return $_POST ? $_POST : [];
     }
 
     private function getGet(){
         if($_GET){
             $get = $_GET;
-            unset($get["param"]);
+            unset($get["param"]); // Remove o parametro da rota
             return $get;
         }
         return [];
     }
 
     private function getInput(){
+        // Esta é a parte MAIS IMPORTANTE para o Postman funcionar
         $input = file_get_contents("php://input");
-
         if($input){
-
-            return json_decode($input,true);
+            $json = json_decode($input, true);
+            return is_array($json) ? $json : [];
         }
         return [];
-
     }
 
     public function getParam(){
-        return array_merge($this->getPost(),$this->getGet(),$this->getInput());
+        // Junta tudo num array só. O JSON (Input) tem prioridade.
+        return array_merge($this->getGet(), $this->getPost(), $this->getInput());
     }
-
 }

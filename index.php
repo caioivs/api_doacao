@@ -9,6 +9,6 @@ if (file_exists('vendor/autoload.php')) {
 use generic\Controller;
 
 $controller = new Controller();
-$parametro = (isset($_GET["param"]) && !empty($_GET["param"])) ? $_GET["param"] : "home";
+$parametro = (isset($_GET["param"]) && !empty($_GET["param"])) ? trim($_GET["param"]) : "home";
 $controller->verificarChamadas($parametro);
 ?>

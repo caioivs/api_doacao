@@ -10,10 +10,11 @@ class MysqlSingleton {
     public static function getInstance() {
         if (self::$instance == null) {
             try {
-                self::$instance = new PDO('mysql:host=localhost;dbname=mvc_votacao', 'root', '');
+                // ALTERADO: dbname=api_doacoes
+                self::$instance = new PDO('mysql:host=localhost;dbname=api_doacoes', 'root', '');
                 self::$instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             } catch (\Exception $e) {
-                die('Erro fatal de conexão.');
+                die('Erro fatal de conexão: ' . $e->getMessage());
             }
         }
         return self::$instance;

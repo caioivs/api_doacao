@@ -3,81 +3,64 @@ namespace dao\mysql;
 use generic\MysqlFactory;
 use PDO;
 
-class IdeiaDAO extends MysqlFactory {
+class DoacaoDAO extends MysqlFactory {
     
     public function listar() {
         try {
-            $sql = "SELECT i.*, u.nome as autor, 
-                    (SELECT COUNT(*) FROM votos v WHERE v.ideia_id = i.id) as total_votos 
-                    FROM ideias i 
-                    JOIN usuarios u ON i.usuario_id = u.id 
-                    ORDER BY total_votos DESC";
+            // Traz também o nome do doador fazendo JOIN
+            $sql = "SELECT d.*, do.nome as nome_doador 
+                    FROM doacoes d 
+                    JOIN doadores do ON d.doador_id = do.id 
+                    ORDER BY d.id DESC";
             return $this->banco->query($sql)->fetchAll(PDO::FETCH_ASSOC);
         } catch (\Exception $e) {
-            // PDF: "Nenhum erro técnico deve ser exibido"
-            throw new \Exception("Erro ao acessar banco de dados");
+            throw new \Exception("Erro ao listar doações");
         }
     }
 
-    public function buscarPorId($id) {
+    public function inserir($titulo, $descricao, $quantidade, $data_validade, $doador_id) {
         try {
-            $sql = "SELECT * FROM ideias WHERE id = :id";
+            $sql = "INSERT INTO doacoes (titulo, descricao, quantidade, data_validade, status, doador_id) 
+                    VALUES (:ti, :de, :qt, :dt, 'disponivel', :do)";
             $stmt = $this->banco->prepare($sql);
-            $stmt->bindValue(":id", $id);
-            $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (\Exception $e) {
-            throw new \Exception("Erro ao buscar ideia");
-        }
-    }
-
-    public function inserir($titulo, $descricao, $usuario_id) {
-        try {
-            $sql = "INSERT INTO ideias (titulo, descricao, usuario_id) VALUES (:t, :d, :u)";
-            $stmt = $this->banco->prepare($sql);
-            $stmt->bindValue(':t', $titulo);
-            $stmt->bindValue(':d', $descricao);
-            $stmt->bindValue(':u', $usuario_id);
+            $stmt->bindValue(':ti', $titulo);
+            $stmt->bindValue(':de', $descricao);
+            $stmt->bindValue(':qt', $quantidade);
+            $stmt->bindValue(':dt', $data_validade);
+            $stmt->bindValue(':do', $doador_id);
             return $stmt->execute();
         } catch (\Exception $e) {
-            throw new \Exception("Erro ao salvar ideia");
+            throw new \Exception("Erro ao inserir doação: " . $e->getMessage());
         }
     }
 
-    public function atualizar($id, $titulo, $descricao) {
+    public function atualizar($id, $titulo, $descricao, $quantidade, $data_validade) {
         try {
-            $sql = "UPDATE ideias SET titulo = :t, descricao = :d WHERE id = :id";
+            $sql = "UPDATE doacoes SET titulo = :ti, descricao = :de, quantidade = :qt, data_validade = :dt 
+                    WHERE id = :id";
             $stmt = $this->banco->prepare($sql);
-            $stmt->bindValue(':t', $titulo);
-            $stmt->bindValue(':d', $descricao);
+            $stmt->bindValue(':ti', $titulo);
+            $stmt->bindValue(':de', $descricao);
+            $stmt->bindValue(':qt', $quantidade);
+            $stmt->bindValue(':dt', $data_validade);
             $stmt->bindValue(':id', $id);
             return $stmt->execute();
         } catch (\Exception $e) {
-            throw new \Exception("Erro ao atualizar ideia");
+            throw new \Exception("Erro ao atualizar doação");
         }
     }
 
     public function excluir($id) {
         try {
-            $this->banco->query("DELETE FROM votos WHERE ideia_id = $id"); // Apaga votos antes
-            $sql = "DELETE FROM ideias WHERE id = :id";
+            // Remove dependências primeiro (solicitações)
+            $this->banco->query("DELETE FROM solicitacoes WHERE doacao_id = $id");
+            
+            $sql = "DELETE FROM doacoes WHERE id = :id";
             $stmt = $this->banco->prepare($sql);
             $stmt->bindValue(':id', $id);
             return $stmt->execute();
         } catch (\Exception $e) {
-            throw new \Exception("Erro ao excluir ideia");
-        }
-    }
-
-    public function registrarVoto($usuario_id, $ideia_id) {
-        try {
-            $sql = "INSERT INTO votos (usuario_id, ideia_id) VALUES (:u, :i)";
-            $stmt = $this->banco->prepare($sql);
-            $stmt->bindValue(':u', $usuario_id);
-            $stmt->bindValue(':i', $ideia_id);
-            return $stmt->execute();
-        } catch (\Exception $e) {
-            throw new \Exception("Você já votou nesta ideia ou erro interno");
+            throw new \Exception("Erro ao excluir doação");
         }
     }
 }

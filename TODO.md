@@ -1,4 +1,8 @@
-- [x] Atualizar Acao.php para incluir constantes de métodos HTTP e métodos de execução conforme o código fornecido
-- [x] Atualizar Rotas.php para usar objetos Acao para as rotas, adaptando as rotas existentes
-- [x] Atualizar Controller.php para usar o novo método executar e lidar com Retorno
-- [x] Testar as mudanças para garantir que as rotas funcionem corretamente
+# TODO: Fix 404 Error for Login URL
+
+## Steps to Complete
+- [x] Update Controller.php: Change redirect path from "/mvc_votacao/login/form" to "/api_doacao/login/form"
+- [x] Update Auth.php: Change "/mvc_votacao/ideia/listar" to "/api_doacao/ideia/listar" in autenticarWeb method
+- [x] Update Auth.php: Change "/mvc_votacao/login/form" to "/api_doacao/login/form" in autenticarWeb method (JavaScript alert)
+- [x] Update Auth.php: Change "/mvc_votacao/home" to "/api_doacao/home" in logout method
+- [x] Test the URL http://localhost/api_doacao/index.php?param=login/form to ensure it works

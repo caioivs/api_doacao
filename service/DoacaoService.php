@@ -1,58 +1,30 @@
 <?php
 namespace service;
-use dao\mysql\IdeiaDAO;
+use dao\mysql\DoacaoDAO;
 
-class IdeiaService {
+class DoacaoService {
     private $dao;
 
     public function __construct() {
-        $this->dao = new IdeiaDAO();
+        $this->dao = new DoacaoDAO();
     }
 
-    public function listarIdeias() {
-        try {
-            return $this->dao->listar();
-        } catch (\Exception $e) {
-            throw $e; // Repassa exceção para o Controller tratar
-        }
+    public function listar() {
+        return $this->dao->listar();
     }
 
-    public function buscarIdeia($id) {
-        try {
-            return $this->dao->buscarPorId($id);
-        } catch (\Exception $e) {
-            throw $e;
-        }
-    }
-
-    public function salvarIdeia($titulo, $descricao, $usuario_id, $id = null) {
+    public function criar($titulo, $descricao, $quantidade, $data_validade, $doador_id) {
         if (empty($titulo) || empty($descricao)) {
-            throw new \Exception("Campos obrigatórios não preenchidos");
+            throw new \Exception("Título e descrição são obrigatórios");
         }
-        try {
-            if ($id) {
-                return $this->dao->atualizar($id, $titulo, $descricao);
-            } else {
-                return $this->dao->inserir($titulo, $descricao, $usuario_id);
-            }
-        } catch (\Exception $e) {
-            throw $e;
-        }
+        return $this->dao->inserir($titulo, $descricao, $quantidade, $data_validade, $doador_id);
     }
 
-    public function excluirIdeia($id) {
-        try {
-            return $this->dao->excluir($id);
-        } catch (\Exception $e) {
-            throw $e;
-        }
+    public function editar($id, $titulo, $descricao, $quantidade, $data_validade) {
+        return $this->dao->atualizar($id, $titulo, $descricao, $quantidade, $data_validade);
     }
 
-    public function votar($usuario_id, $ideia_id) {
-        try {
-            return $this->dao->registrarVoto($usuario_id, $ideia_id);
-        } catch (\Exception $e) {
-            throw $e;
-        }
+    public function excluir($id) {
+        return $this->dao->excluir($id);
     }
 }

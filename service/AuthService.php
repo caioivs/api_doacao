@@ -1,22 +1,28 @@
 <?php
 namespace service;
-use dao\mysql\UsuarioDAO;
+use dao\mysql\DoadorDAO;
 use generic\JWTAuth;
 
 class AuthService {
+    
     public function autenticar($email, $senha) {
         try {
-            $dao = new UsuarioDAO();
-            $usuario = $dao->buscarPorEmailSenha($email, $senha);
+            $dao = new DoadorDAO();
+            // Aplica MD5 na senha para bater com o banco fornecido
+            $senhaMd5 = md5($senha);
+            
+            $usuario = $dao->buscarPorEmailSenha($email, $senhaMd5);
 
             if ($usuario) {
                 $jwt = new JWTAuth();
+                // Cria o token com o ID do doador
                 $token = $jwt->criarChave($usuario['id']);
-                return ['token' => $token, 'sucesso' => true];
+                return ['sucesso' => true, 'token' => $token, 'usuario' => $usuario['nome']];
             }
-            return ['erro' => 'Credenciais inválidas'];
+            
+            return ['sucesso' => false, 'erro' => 'Credenciais inválidas'];
         } catch (\Exception $e) {
-            return ['erro' => $e->getMessage()];
+            return ['sucesso' => false, 'erro' => $e->getMessage()];
         }
     }
 }
