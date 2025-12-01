@@ -7,7 +7,7 @@ class DoacaoDAO extends MysqlFactory {
     
     public function listar() {
         try {
-            // Traz também o nome do doador fazendo JOIN
+           
             $sql = "SELECT d.*, do.nome as nome_doador 
                     FROM doacoes d 
                     JOIN doadores do ON d.doador_id = do.id 

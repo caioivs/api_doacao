@@ -54,7 +54,7 @@ class Acao
         return $reflectMetodo->invokeArgs($obj, $argumentosParaFuncao);
     }
 
-    // Mantive suas funções originais de pegar dados, mas simplifiquei a chamada
+   
     private function getPost(){
         return $_POST ? $_POST : [];
     }
@@ -69,7 +69,7 @@ class Acao
     }
 
     private function getInput(){
-        // Esta é a parte MAIS IMPORTANTE para o Postman funcionar
+      
         $input = file_get_contents("php://input");
         if($input){
             $json = json_decode($input, true);
@@ -79,7 +79,7 @@ class Acao
     }
 
     public function getParam(){
-        // Junta tudo num array só. O JSON (Input) tem prioridade.
+        
         return array_merge($this->getGet(), $this->getPost(), $this->getInput());
     }
 }

@@ -4,83 +4,61 @@ use generic\MysqlFactory;
 use PDO;
 
 class InstituicaoDAO extends MysqlFactory {
-
-    public function buscarPorEmailSenha($email, $senha) {
-        try {
-            $sql = "SELECT * FROM instituicoes WHERE email = :e AND senha = :s";
-            $stmt = $this->banco->prepare($sql);
-            $stmt->bindValue(':e', $email);
-            $stmt->bindValue(':s', $senha);
-            $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (\Exception $e) {
-            throw new \Exception("Erro ao buscar instituição");
-        }
-    }
-
+    
     public function listar() {
         try {
-            $sql = "SELECT * FROM instituicoes";
+            $sql = "SELECT id, nome, email, telefone, endereco, tipo FROM instituicoes ORDER BY nome ASC";
             return $this->banco->query($sql)->fetchAll(PDO::FETCH_ASSOC);
         } catch (\Exception $e) {
             throw new \Exception("Erro ao listar instituições");
         }
     }
 
-    public function buscarPorId($id) {
+    public function inserir($nome, $email, $senha, $telefone, $endereco, $tipo) {
         try {
-            $sql = "SELECT * FROM instituicoes WHERE id = :id";
-            $stmt = $this->banco->prepare($sql);
-            $stmt->bindValue(':id', $id);
-            $stmt->execute();
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (\Exception $e) {
-            throw new \Exception("Erro ao buscar instituição");
-        }
-    }
-
-    public function inserir($nome, $email, $senha, $telefone = null, $endereco = null, $tipo = null) {
-        try {
-            $sql = "INSERT INTO instituicoes (nome, email, senha, telefone, endereco, tipo) VALUES (:n, :e, :s, :t, :end, :tipo)";
+            $sql = "INSERT INTO instituicoes (nome, email, senha, telefone, endereco, tipo) 
+                    VALUES (:n, :e, :s, :t, :end, :tip)";
             $stmt = $this->banco->prepare($sql);
             $stmt->bindValue(':n', $nome);
             $stmt->bindValue(':e', $email);
-            $stmt->bindValue(':s', $senha);
+            $stmt->bindValue(':s', md5($senha)); // Criptografa senha
             $stmt->bindValue(':t', $telefone);
             $stmt->bindValue(':end', $endereco);
-            $stmt->bindValue(':tipo', $tipo);
+            $stmt->bindValue(':tip', $tipo);
             return $stmt->execute();
         } catch (\Exception $e) {
-            throw new \Exception("Erro ao cadastrar instituição");
+            throw new \Exception("Erro ao cadastrar instituição: " . $e->getMessage());
         }
     }
 
-    public function solicitarDoacao($doacao_id, $instituicao_id) {
+    public function atualizar($id, $nome, $email, $telefone, $endereco, $tipo) {
         try {
-            $sql = "INSERT INTO solicitacoes (doacao_id, instituicao_id) VALUES (:d, :i)";
+            $sql = "UPDATE instituicoes SET nome = :n, email = :e, telefone = :t, endereco = :end, tipo = :tip 
+                    WHERE id = :id";
             $stmt = $this->banco->prepare($sql);
-            $stmt->bindValue(':d', $doacao_id);
-            $stmt->bindValue(':i', $instituicao_id);
+            $stmt->bindValue(':n', $nome);
+            $stmt->bindValue(':e', $email);
+            $stmt->bindValue(':t', $telefone);
+            $stmt->bindValue(':end', $endereco);
+            $stmt->bindValue(':tip', $tipo);
+            $stmt->bindValue(':id', $id);
             return $stmt->execute();
         } catch (\Exception $e) {
-            throw new \Exception("Erro ao solicitar doação");
+            throw new \Exception("Erro ao atualizar instituição");
         }
     }
 
-    public function listarSolicitacoes($instituicao_id) {
+    public function excluir($id) {
         try {
-            $sql = "SELECT s.*, d.titulo, d.descricao, d.quantidade, d.data_validade, do.nome as doador_nome
-                    FROM solicitacoes s
-                    JOIN doacoes d ON s.doacao_id = d.id
-                    JOIN doadores do ON d.doador_id = do.id
-                    WHERE s.instituicao_id = :i
-                    ORDER BY s.data_solicitacao DESC";
+            // Remove solicitações vinculadas antes (conforme seu banco)
+            $this->banco->query("DELETE FROM solicitacoes WHERE instituicao_id = $id");
+            
+            $sql = "DELETE FROM instituicoes WHERE id = :id";
             $stmt = $this->banco->prepare($sql);
-            $stmt->bindValue(':i', $instituicao_id);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt->bindValue(':id', $id);
+            return $stmt->execute();
         } catch (\Exception $e) {
-            throw new \Exception("Erro ao listar solicitações");
+            throw new \Exception("Erro ao excluir instituição");
         }
     }
 }

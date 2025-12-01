@@ -1,7 +1,7 @@
 <?php
 include "generic/Autoload.php";
 
-// Carrega o Composer (necessário para a biblioteca JWT)
+// Carrega o Composer 
 if (file_exists('vendor/autoload.php')) {
     require 'vendor/autoload.php';
 }

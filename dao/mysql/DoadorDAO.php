@@ -7,7 +7,7 @@ class DoadorDAO extends MysqlFactory {
     
     public function buscarPorEmailSenha($email, $senha) {
         try {
-            // O SQL fornecido usa MD5 na senha, então comparamos direto
+            
             $sql = "SELECT * FROM doadores WHERE email = :e AND senha = :s";
             $stmt = $this->banco->prepare($sql);
             $stmt->bindValue(':e', $email);
